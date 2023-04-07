@@ -1,7 +1,4 @@
 const express = require("express");
-const fs = require("fs");
-const path = require('path');
-const bodyParser = require("body-parser");
 const mysql = require("mysql2");
 const cors = require('cors')
 
@@ -27,41 +24,51 @@ app.use(express.json())
 
 
 // ------------------------------------------- Authentication -------------------------------------------
-function authentication(req, res, next) {
-    const authheader = req.headers.authorization;
-    console.log(req.headers);
- 
-    if (!authheader) {
-        let err = new Error('You are not authenticated!');
-        res.setHeader('WWW-Authenticate', 'Basic');
-        err.status = 401;
-        return next(err)
-    }
- 
-    const auth = new Buffer.from(authheader.split(' ')[1],
-        'base64').toString().split(':');
-    const user = auth[0];
-    const pass = auth[1];
- 
-    if (user == 'admin' && pass == 'admin') {
-        
-        // If admin user
 
-        res.writeHead(301, {
-          Location: `http://localhost:3000/`
-        }).end();
-
+// POST route to add a new user
+app.post('/signup', (req, res) => {
+  const { username, password } = req.body;
+  // use connection pool to insert new user into database
+  pool.query('INSERT INTO users (username, password) VALUES (?, ?)', [username, password], (err, results) => {
+    if (err) {
+      res.status(500).json({signin: false, userId: 0});
     } else {
-        let err = new Error('You are not authenticated!');
-        res.setHeader('WWW-Authenticate', 'Basic');
-        err.status = 401;
-        return next(err);
+      res.json({signin: true, username: userId.insertId});
     }
- 
-}
+  });
+});
 
-// app.use(authentication)
-// app.use(express.static(path.join(__dirname, 'public')));
+// DELETE route to remove a user by ID
+app.delete('/users/:id', (req, res) => {
+  const { id } = req.params;
+  // use connection pool to delete user from database by ID
+  pool.query('DELETE FROM users WHERE id = ?', [id], (err, results) => {
+    if (err) {
+      res.status(500).send('Error deleting user from database');
+    } else if (results.affectedRows === 0) {
+      res.status(404).send('User not found');
+    } else {
+      res.send('User deleted successfully');
+    }
+  });
+});
+
+
+app.post("/signin", function (req, res) {
+  const { username, password } = req.body;
+
+  pool.query('SELECT * FROM users WHERE username = ? AND password = ?', [username, password], (err, results) => {
+    if (err) {
+      res.status(500).send('Error retrieving users from database');
+    } else {
+      if (results.length > 0) {
+        res.json({signin: true, userId: results[0].id});
+      } else {
+        res.json({signin: false, userId: 0});
+      }
+    }
+  });
+});
 
 
 app.get("/ping", function (req, res) {
@@ -182,10 +189,8 @@ app.get("/api/channels/:channelId/messages", async (req, res) => {
 // Set up routes for posting messages
 app.post("/api/channels/:channelId/messages", async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text, userId } = req.body;
     const { channelId } = req.params;
-    //   const { userId } = req.user;
-    const userId = 1;
 
     // create new message
     pool.query(
@@ -243,10 +248,8 @@ app.post(
   "/api/messages/:messageId/replies",
   async (req, res) => {
     try {
-      const { text } = req.body;
+      const { text, userId } = req.body;
       const { messageId } = req.params;
-      //   const { userId } = req.user;
-      const userId = 1;
 
       // create new reply
       pool.query(

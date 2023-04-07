@@ -11,6 +11,9 @@ function Home() {
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState("");
 
+  const signIn = localStorage.getItem('signin');
+  const userId = localStorage.getItem('userId');
+  
   useEffect(() => {
     // Fetch channels from server
     fetch(URL + "/api/channels")
@@ -46,7 +49,7 @@ function Home() {
     fetch(URL  + `/api/channels/${selectedChannel}/messages`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: messageInput }),
+      body: JSON.stringify({ text: messageInput, userId: userId }),
     })
       .then((res) => res.json())
       .then((data) => {
@@ -61,7 +64,7 @@ function Home() {
     fetch(URL + `/api/messages/${parentMessageId}/replies`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: messageInput }),
+      body: JSON.stringify({ text: messageInput, userId: userId }),
     })
       .then((res) => res.json())
       .then((data) => {
@@ -97,6 +100,10 @@ function Home() {
         setMessages(updatedMessages);
       })
       .catch((error) => console.error(error));
+  }
+
+  if (signIn === "false" || userId === "0") {
+    return <h1>You have to signin to use the app!</h1>
   }
 
   return (
