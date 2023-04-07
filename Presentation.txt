@@ -1,0 +1,39 @@
+[Opening slide with system name and presenter's name]
+
+Presenter: Hi everyone, welcome to this demonstration of our system. Today, I'll be showing you the key features of our system and how it works.
+
+[Next slide with an overview of the system architecture]
+
+Presenter: As you can see from this diagram, our system consists of two main parts: the backend API and the frontend application. The backend is built using Node.js and MySQL, while the frontend is built using React. Let's start with the backend.
+
+[Next slide showing the backend API endpoints]
+
+Presenter: Our backend provides several API endpoints for managing users, messages, and replies. These endpoints can be accessed using HTTP requests with JSON payloads. For example, to create a new user, you would send a POST request to the /api/users endpoint with the user's details in the request body.
+
+[Demo of creating a new user using the API]
+
+Presenter: Here, I'm using a tool like Postman to send a POST request to the /api/users endpoint with some dummy user data. As you can see, the API returns a JSON response with the new user's details, including a unique ID.
+
+[Next slide showing the frontend application]
+
+Presenter: Now, let's move on to the frontend. Our application allows users to view and create messages, as well as reply to messages. It also has a sign-in and sign-out feature for user authentication.
+
+[Demo of signing in to the application]
+
+Presenter: Here, I'm signing in to the application using some test user credentials. As you can see, the application redirects me to the home page after successful sign-in.
+
+[Demo of viewing messages and replies]
+
+Presenter: On the home page, users can view a list of messages and their replies. Clicking on a message expands it to show its replies. Users can also create new messages and replies using the form on the page.
+
+[Demo of creating a new message and reply]
+
+Presenter: Here, I'm creating a new message and reply using the form. After submitting the form, the application updates the UI to show the new message and reply.
+
+[Demo of signing out of the application]
+
+Presenter: Finally, users can sign out of the application at any time using the sign-out button in the header.
+
+[Closing slide with contact information]
+
+Presenter: That concludes our demonstration of the system. If you have any questions or feedback, please feel free to contact us using the information on this slide. Thank you for watching!

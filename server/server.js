@@ -33,7 +33,7 @@ app.post('/signup', (req, res) => {
     if (err) {
       res.status(500).json({signin: false, userId: 0});
     } else {
-      res.json({signin: true, username: userId.insertId});
+      res.json({signin: true, userId: results.insertId});
     }
   });
 });
