@@ -23,6 +23,7 @@ CREATE TABLE `messages` (
   `user_id` int NOT NULL,
   `text` VARCHAR(255) NOT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `like` int DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `channel_id` (`channel_id`),
   KEY `user_id` (`user_id`),
@@ -36,7 +37,11 @@ CREATE TABLE `replies` (
   `message_id` int NOT NULL,
   `user_id` int NOT NULL,
   `reply` text NOT NULL,
+  `like` int DEFAULT 0,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `message_id` (`message_id`)
 );
+
+
+INSERT INTO users (username, password) VALUES ('root', 'root');

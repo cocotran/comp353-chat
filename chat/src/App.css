@@ -196,3 +196,16 @@ body {
   font-size: 0.85rem;
   margin-bottom: 10px;
 }
+
+.like-btn {
+  border: none !important;
+  padding: 3px 5px !important;
+  margin-right: 0.75rem !important;
+  font-size: 12px !important;
+  background-color: rgb(0, 55, 255) !important;
+  color: white;
+}
+
+.ml-1 {
+  margin-right: 1rem;
+}

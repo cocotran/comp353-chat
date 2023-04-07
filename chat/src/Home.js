@@ -102,6 +102,54 @@ function Home() {
       .catch((error) => console.error(error));
   }
 
+  function like(messageID, sign) {
+    // Send new reply to server
+    fetch(URL + `/api/channels/${selectedChannel}/messages/${messageID}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sign }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const updatedMessages = messages.map((message) => {
+          if (message.id === data[0].id) {
+            return {
+              ...message,
+              like: data[0].like,
+            };
+          }
+          return message;
+        });
+        setMessages(updatedMessages);
+        console.log(data[0])
+      })
+      .catch((error) => console.error(error));
+  }
+
+  function likeReply(messageID, replyID, sign) {
+    // Send new reply to server
+    fetch(URL + `/api/messages/${messageID}/replies/${replyID}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sign }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const updatedMessages = messages.map((message) => {
+          if (message.id === messageID) {
+            return {
+              ...message,
+              replies: data,
+            };
+          }
+          return message;
+        });
+        setMessages(updatedMessages);
+        console.log(data)
+      })
+      .catch((error) => console.error(error));
+  }
+
   if (signIn === "false" || userId === "0") {
     return <h1>You have to signin to use the app!</h1>
   }
@@ -119,7 +167,7 @@ function Home() {
       <div className="message-container">
         {selectedChannel && (
           <>
-            <MessageList messages={messages} onReplyClick={handleSendReply} getRepliesForMessage={getRepliesForMessage} />
+            <MessageList messages={messages} onReplyClick={handleSendReply} getRepliesForMessage={getRepliesForMessage} like={like} likeReply={likeReply} />
             <MessageInput
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
@@ -152,13 +200,29 @@ function ChannelList({ channels, selectedChannel, onChannelSelect, onCreateChann
 }
 
 
-function Message({ message, onReplyClick, getRepliesForMessage }) {
+function Message({ message, onReplyClick, getRepliesForMessage, like, likeReply }) {
   const handleReplyClick = () => {
     onReplyClick(message.id);
   };
 
   const handleLoadReplyClick = () => {
     getRepliesForMessage(message.id);
+  };
+
+  const handlelikeClick = () => {
+    like(message.id, "+");
+  };
+
+  const handleUnlikeClick = () => {
+    like(message.id, "-");
+  };
+
+  const handlelikeReplyClick = (replyID) => {
+    likeReply(message.id, replyID, "+");
+  };
+
+  const handleUnlikeReplyClick = (replyID) => {
+    likeReply(message.id, replyID, "-");
   };
 
   const displayReplies = () => {
@@ -168,10 +232,25 @@ function Message({ message, onReplyClick, getRepliesForMessage }) {
           <span className="message-username">{reply.username}</span>
           <span className="message-timestamp">{new Date(reply.created_at).toLocaleString()}</span>
           <div className="reply-body">{reply.reply}</div>
+          <div>
+            <button className="like-btn" onClick={() => handlelikeReplyClick(reply.id)}>Like</button>
+            <span>{reply.like}</span>
+            <button className="like-btn" onClick={() => handleUnlikeReplyClick(reply.id)}>Unlike</button>
+          </div>
         </div>
       ))
     }
     return <div></div>
+  }
+
+  const displayLike = () => {
+    return (
+      <div>
+        <button className="like-btn" onClick={handlelikeClick}>Like</button>
+        <span>{message.like}</span>
+        <button className="like-btn" onClick={handleUnlikeClick}>Unlike</button>
+      </div>
+    )
   }
   
   return (
@@ -183,7 +262,7 @@ function Message({ message, onReplyClick, getRepliesForMessage }) {
       <div className="message-body">{message.text}</div>
       {displayReplies()}
       <div className="message-actions">
-
+        {displayLike()}
         <button onClick={handleLoadReplyClick}>Load Reply</button>
         <button onClick={handleReplyClick}>Reply</button>
       </div>
@@ -191,7 +270,7 @@ function Message({ message, onReplyClick, getRepliesForMessage }) {
   );
 }
 
-function MessageList({ messages, onReplyClick, getRepliesForMessage }) {
+function MessageList({ messages, onReplyClick, getRepliesForMessage, like, likeReply }) {
   return (
     <div className="message-list">
       {messages.map((message) => (
@@ -200,6 +279,8 @@ function MessageList({ messages, onReplyClick, getRepliesForMessage }) {
           message={message}
           onReplyClick={onReplyClick}
           getRepliesForMessage={getRepliesForMessage}
+          like={like}
+          likeReply={likeReply}
         />
       ))}
     </div>

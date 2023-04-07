@@ -41,16 +41,21 @@ app.post('/signup', (req, res) => {
 // DELETE route to remove a user by ID
 app.delete('/users/:id', (req, res) => {
   const { id } = req.params;
-  // use connection pool to delete user from database by ID
-  pool.query('DELETE FROM users WHERE id = ?', [id], (err, results) => {
-    if (err) {
-      res.status(500).send('Error deleting user from database');
-    } else if (results.affectedRows === 0) {
-      res.status(404).send('User not found');
-    } else {
-      res.send('User deleted successfully');
-    }
-  });
+
+  if (id === 1) { // admin will have id == 1
+    // use connection pool to delete user from database by ID
+    pool.query('DELETE FROM users WHERE id = ?', [id], (err, results) => {
+      if (err) {
+        res.status(500).send('Error deleting user from database');
+      } else if (results.affectedRows === 0) {
+        res.status(404).send('User not found');
+      } else {
+        res.send('User deleted successfully');
+      }
+    });
+  } else {
+    res.send('You are not system administrator');
+  }
 });
 
 
@@ -147,6 +152,7 @@ app.get("/api/channels/:id", (req, res) => {
 app.delete("/api/channels/:id", (req, res) => {
   const { id } = req.params;
 
+  if (id === 1) { // admin will have id == 1
   // Execute SQL query to delete the channel from the database
   pool.query("DELETE FROM channels WHERE id = ?", [id], (error, results) => {
     if (error) {
@@ -162,6 +168,9 @@ app.delete("/api/channels/:id", (req, res) => {
     // Return success response
     return res.sendStatus(204);
   });
+  } else {
+    res.send('You are not system administrator');
+  }
 });
 
 // Set up routes for getting messages
@@ -169,7 +178,7 @@ app.get("/api/channels/:channelId/messages", async (req, res) => {
   try {
     const { channelId } = req.params;
     pool.query(
-      "SELECT m.id, m.text, m.created_at, u.username FROM messages m INNER JOIN users u ON m.user_id = u.id WHERE channel_id = ?",
+      "SELECT m.id, m.text, m.created_at, m.like, u.username FROM messages m INNER JOIN users u ON m.user_id = u.id WHERE channel_id = ?",
       [channelId],
       (error, results) => {
         if (error) {
@@ -197,7 +206,7 @@ app.post("/api/channels/:channelId/messages", async (req, res) => {
       `INSERT INTO messages (text, user_id, channel_id) VALUES ('${text}', '${userId}', '${channelId}')`,
       (error, results) => {
         pool.query(
-          "SELECT m.id, m.text, m.created_at, u.username FROM messages m INNER JOIN users u ON m.user_id = u.id WHERE channel_id = ?",
+          "SELECT m.id, m.text, m.created_at, m.like, u.username FROM messages m INNER JOIN users u ON m.user_id = u.id WHERE channel_id = ?",
           [channelId],
           (error, results) => {
             if (error) {
@@ -225,7 +234,7 @@ app.get(
       const { messageId } = req.params;
 
       pool.query(
-        "SELECT r.id, r.message_id, r.reply, r.created_at, u.username FROM replies r INNER JOIN users u ON r.user_id = u.id  WHERE message_id = ?",
+        "SELECT r.id, r.message_id, r.reply, r.created_at, r.like, u.username FROM replies r INNER JOIN users u ON r.user_id = u.id  WHERE message_id = ?",
         [messageId],
         (error, results) => {
           if (error) {
@@ -256,7 +265,7 @@ app.post(
         `INSERT INTO replies (reply, user_id, message_id) VALUES ('${text}', '${userId}', '${messageId}')`,
         (error, results) => {
           pool.query(
-            "SELECT r.id, r.message_id, r.reply, r.created_at, u.username FROM replies r INNER JOIN users u ON r.user_id = u.id  WHERE message_id = ?",
+            "SELECT r.id, r.message_id, r.reply, r.created_at, r.like, u.username FROM replies r INNER JOIN users u ON r.user_id = u.id  WHERE message_id = ?",
             [messageId],
             (error, results) => {
               if (error) {
@@ -277,6 +286,77 @@ app.post(
     }
   }
 );
+
+// update count message
+app.post(
+  "/api/channels/:channelId/messages/:messageId",
+  async (req, res) => {
+    try {
+      const { channelId, messageId } = req.params;
+      const { sign } = req.body;
+
+      // create new reply
+      pool.query(
+        `UPDATE messages m SET m.like = m.like ${sign} 1 WHERE id = ${messageId}`,
+        (error, results) => {
+          pool.query(
+            "SELECT m.id, m.like FROM messages m WHERE id = ?",
+              [messageId],
+            (error, results) => {
+              if (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to get messages" });
+              }
+    
+              return res.json(results);
+            }
+          );
+        }
+      );
+
+
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send("Server error");
+    }
+  }
+);
+
+// update count reply
+app.post(
+  "/api/messages/:messageId/replies/:replyID",
+  async (req, res) => {
+    try {
+      const { messageId, replyID } = req.params;
+      const { sign } = req.body;
+
+      // create new reply
+      pool.query(
+        `UPDATE replies r SET r.like = r.like ${sign} 1 WHERE id = ${replyID}`,
+        (error, results) => {
+          pool.query(
+            "SELECT r.id, r.message_id, r.reply, r.created_at, r.like, u.username FROM replies r INNER JOIN users u ON r.user_id = u.id  WHERE message_id = ?",
+              [messageId],
+            (error, results) => {
+              if (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to get messages" });
+              }
+    
+              return res.json(results);
+            }
+          );
+        }
+      );
+
+
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send("Server error");
+    }
+  }
+);
+
 
 
 // ------------------------------------------- Start server -------------------------------------------
